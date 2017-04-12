@@ -1,0 +1,5 @@
+cmake-build-debug/
+.idea/
+atease
+text-editor.iml
+CMakeLists.txt
