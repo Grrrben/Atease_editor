@@ -98,13 +98,13 @@ enum editorHighlight {
 };
 
 enum colors {
-    BLACK = 37,
-    RED = 31,
-    GREEN = 32,
-    YELLOW = 33,
-    BLUE = 34,
-    MAGENTA = 35,
-    CYAN = 36
+    COLOR_BLACK = 37,
+    COLOR_RED = 31,
+    COLOR_GREEN = 32,
+    COLOR_YELLOW = 33,
+    COLOR_BLUE = 34,
+    COLOR_MAGENTA = 35,
+    COLOR_CYAN = 36
 };
 
 struct abuf {
@@ -115,14 +115,19 @@ struct abuf {
 /*** filetypes ***/
 
 char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
+char *PHP_HL_extensions[] = { ".php", NULL };
 
 /* we’ll highlight common C types as secondary keywords, so we end each one with a | character. */
 char *C_HL_keywords[] = {
         "#define", "#include", "switch", "if", "while", "for", "break", "continue", "return", "else",
         "struct", "union", "typedef", "static", "enum", "class", "case",
+        "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|", "void|", NULL
+};
 
-        "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-        "void|", NULL
+char *PHP_HL_keywords[] = {
+        "use", "include", "switch", "if", "while", "for", "break", "continue", "return", "else",
+        "struct", "static", "class", "case",
+        "int|", "float|",  "unsigned|", "signed|", "string|", "void|", "enum|", NULL
 };
 
 /* HighLightDataBase*/
@@ -131,6 +136,15 @@ struct editorSyntax HLDB[] = {
         "c",
         C_HL_extensions,
         C_HL_keywords,
+        "//",
+        "/*",
+        "*/",
+        HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
+    },
+    {
+        "php",
+        PHP_HL_extensions,
+        PHP_HL_keywords,
         "//",
         "/*",
         "*/",
@@ -415,19 +429,19 @@ int editorSyntaxToColor(int hl) {
     switch (hl) {
         case HL_COMMENT:
         case HL_MLCOMMENT:
-            return CYAN;
+            return COLOR_CYAN;
         case HL_NUMBER:
-            return RED;
+            return COLOR_RED;
         case HL_MATCH:
-            return BLUE;
+            return COLOR_BLUE;
         case HL_STRING:
-            return MAGENTA;
+            return COLOR_MAGENTA;
         case HL_KEYWORD1:
-            return YELLOW;
+            return COLOR_YELLOW;
         case HL_KEYWORD2:
-            return GREEN;
+            return COLOR_GREEN;
         default:
-            return BLACK;
+            return COLOR_BLACK;
     }
 }
 
@@ -448,7 +462,6 @@ void editorSelectSyntaxHighlight() {
                     for (filerow = 0; filerow < E.numrows; filerow++) {
                         editorUpdateSyntax(&E.row[filerow]);
                     }
-
                     return;
                 }
             }
