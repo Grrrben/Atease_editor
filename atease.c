@@ -20,11 +20,13 @@
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define ABUF_INIT {NULL, 0}
+#define EDITOR_DEBUG 1
 #define EDITOR_VERSION "0.0.1"
 #define EDITOR_TAB_STOP 4
 #define EDITOR_QUIT_TIMES 3
 #define HL_HIGHLIGHT_NUMBERS (1<<0)
 #define HL_HIGHLIGHT_STRINGS (1<<1)
+
 
 #define MESSAGE_START_UP_TEXT "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find"
 #define MESSAGE_SAVED "%d bytes written to disk"
@@ -69,6 +71,7 @@ struct editorConfig {
     int dirty; /* modified since opening or saving the file.  */
     char *filename;
     char statusmsg[80];
+    char debugmsg[80];
     time_t statusmsg_time;
     struct editorSyntax *syntax;
     struct termios orig_termios;
@@ -681,6 +684,16 @@ void editorDrawMessageBar(struct abuf *ab) {
     if (msglen > E.screencols) msglen = E.screencols;
     if (msglen && time(NULL) - E.statusmsg_time < 5)
         abAppend(ab, E.statusmsg, msglen);
+    if (EDITOR_DEBUG == 1)
+		abAppend(ab, "\r\n", 2);
+}
+
+void editorDrawDebugBar(struct abuf *ab) {
+    abAppend(ab, "\x1b[K", 3);
+    int msglen = strlen(E.debugmsg);
+    if (msglen > E.screencols) 
+		msglen = E.screencols;
+    abAppend(ab, E.debugmsg, msglen);
 }
 
 void editorRefreshScreen() {
@@ -695,6 +708,7 @@ void editorRefreshScreen() {
     editorDrawRows(&ab);
     editorDrawStatusBar(&ab);
     editorDrawMessageBar(&ab);
+    editorDrawDebugBar(&ab);
 
     /* 
      * reposition cursor
@@ -720,6 +734,14 @@ void editorSetStatusMessage(const char *fmt, ...) {
     E.statusmsg_time = time(NULL); /* Passing NULL gets the current time */
 }
 
+
+/* The ... argument makes a variadic function, meaning it can take any number of arguments. */
+void editorSetDebugMessage(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(E.debugmsg, sizeof(E.debugmsg), fmt, ap);
+    va_end(ap);
+}
 /*** input ***/
 
 char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
@@ -820,14 +842,20 @@ void initEditor() {
     E.dirty = 0;
     E.filename = NULL;
     E.statusmsg[0] = '\0';
+    E.debugmsg[0] = '\0';
     E.statusmsg_time = 0;
     E.syntax = NULL;
 
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         die("getWindowSize");
 
-    /* for status bar and message on the last 2 lines */
-    E.screenrows -= 2;
+    /* for status bar and message on the last 2 lines
+     * if DEBUG is on, one more line 
+     */
+    int add_lines = 2;
+    if (EDITOR_DEBUG == 1)
+		add_lines = 3;
+    E.screenrows -= add_lines;
 }
 
 int main(int argc, char *argv[]) {
