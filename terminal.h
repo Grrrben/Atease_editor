@@ -1,6 +1,10 @@
 #ifndef TEXT_EDITOR_TERMINAL_H
 #define TEXT_EDITOR_TERMINAL_H
 
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+
 void die(const char *s) {
     write(STDOUT_FILENO, "\x1b[2J", 4);
     write(STDOUT_FILENO, "\x1b[H", 3);
