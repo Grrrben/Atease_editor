@@ -151,6 +151,7 @@ struct editorSyntax HLDB[] = {
  * This allows us to call the function before it is defined.
  */
 void editorSetStatusMessage(const char *fmt, ...);
+void editorSetDebugMessage(const char *fmt, ...);
 void editorRefreshScreen();
 char *editorPrompt(char *prompt, void (*callback)(char *, int));
 void editorFreeRow(erow *row);
@@ -424,6 +425,38 @@ void editorSave() {
     free(buf);
     /* should not be here */
     editorSetStatusMessage(MESSAGE_SAVE_ERROR, strerror(errno));
+}
+
+/*** settings ***/
+
+int readRc(void)
+{
+    FILE * rcfile;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    if (EDITOR_DEBUG == 1)
+        editorSetDebugMessage("reading RC");
+
+    rcfile = fopen(".ateaserc", "r");
+    if (rcfile == NULL) {
+        editorSetDebugMessage("No RC found");
+        return 0;
+    }
+
+    while ((read = getline(&line, &len, rcfile)) != -1) {
+        if (strstr(line, "set ")) {
+            editorSetDebugMessage(line);
+            editorSetDebugMessage("%.*s", sizeof(line), line + 4);
+        }
+    }
+
+    fclose(rcfile);
+    if (line)
+        free(line);
+
+    return 0;
 }
 
 /*** find ***/
@@ -852,6 +885,7 @@ void initEditor() {
     if (EDITOR_DEBUG == 1)
 		add_lines = 3;
     E.screenrows -= add_lines;
+    readRc();
 }
 
 int main(int argc, char *argv[]) {
