@@ -21,7 +21,6 @@
 #define EDITOR_DEBUG 1
 #define EDITOR_VERSION "0.0.1"
 #define EDITOR_TAB_STOP 4
-#define EDITOR_QUIT_TIMES 3
 #define HL_HIGHLIGHT_NUMBERS (1<<0)
 #define HL_HIGHLIGHT_STRINGS (1<<1)
 
@@ -33,6 +32,16 @@
 #define MESSAGE_SAVE_ERROR "Can't save! I/O error: %s"
 #define MESSAGE_SEARCH "Search: %s (Use ESC/Arrows/Enter)"
 #define MESSAGE_QUIT_WARNING "WARNING!!! File has unsaved changes. Press Ctrl-Q %d more times to quit."
+
+/***
+ * Settings
+ * Can be adjusted by a .ateaserc file
+ */
+
+int settings_quit_times = 5;
+int quit_times = 5;
+
+
 
 /*** data ***/
 
@@ -446,7 +455,8 @@ int readRc(void)
     }
 
     while ((read = getline(&line, &len, rcfile)) != -1) {
-        if (strstr(line, "set ")) {
+        char needle[] = "set ";
+        if (strstr(line, needle)) {
 
             /**
              * strchr:
@@ -455,18 +465,27 @@ int readRc(void)
             char dest[12];
             memset(dest, '\0', sizeof(dest));
 
-            char *key;
+            char *key_p;
             char keych = ' ';
-            key = strchr(line, keych);
+            key_p = strchr(line, keych);
 
-            char *value;
+            char *value_p;
             char valch = '=';
-            value = strchr(line, valch);
+            value_p = strchr(line, valch);
 
-            char *to = (char*) malloc((value - key) + 1);
-            strncpy(to, line + 4, (value - 1) - key);
+            char *key = (char*) malloc((value_p - key_p) + 1);
+            strncpy(key, line + (sizeof(needle) - 1), (value_p - 1) - key_p);
 
-            editorSetDebugMessage("%.*s", sizeof(to), to);
+//            switch (key) {
+//                case "quit_times":
+//                    settings_quit_times = 1;
+//                    break;
+//            }
+
+
+
+
+            editorSetDebugMessage("%.*s", sizeof(key), key);
         }
     }
 
@@ -904,6 +923,7 @@ void initEditor() {
 		add_lines = 3;
     E.screenrows -= add_lines;
     readRc();
+    quit_times = settings_quit_times;
 }
 
 int main(int argc, char *argv[]) {

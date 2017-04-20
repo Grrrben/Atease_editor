@@ -1,5 +1,5 @@
 void editorProcessKeypress() {
-    static int quit_times = EDITOR_QUIT_TIMES;
+
     int c = editorReadKey();
 
     /*
@@ -93,5 +93,5 @@ void editorProcessKeypress() {
             break;
     }
 
-    quit_times = EDITOR_QUIT_TIMES;
+    quit_times = settings_quit_times;
 }
