@@ -447,8 +447,26 @@ int readRc(void)
 
     while ((read = getline(&line, &len, rcfile)) != -1) {
         if (strstr(line, "set ")) {
-            editorSetDebugMessage(line);
-            editorSetDebugMessage("%.*s", sizeof(line), line + 4);
+
+            /**
+             * strchr:
+             * a pointer to the first occurrence of character c in string
+             */
+            char dest[12];
+            memset(dest, '\0', sizeof(dest));
+
+            char *key;
+            char keych = ' ';
+            key = strchr(line, keych);
+
+            char *value;
+            char valch = '=';
+            value = strchr(line, valch);
+
+            char *to = (char*) malloc((value - key) + 1);
+            strncpy(to, line + 4, (value - 1) - key);
+
+            editorSetDebugMessage("%.*s", sizeof(to), to);
         }
     }
 
